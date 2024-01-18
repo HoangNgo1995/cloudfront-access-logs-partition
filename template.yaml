@@ -24,7 +24,7 @@ Parameters:
       Prefix that is used for the created resources (20 chars, a-z and 0-9 only)
   NewKeyPrefix:
     Type: String
-    Default: "new/"
+    Default: "core-bbcincorp-com/"
     AllowedPattern: '[A-Za-z0-9\-]+/'
     Description: >
       Prefix of new access log files that are written by Amazon CloudFront.
@@ -44,10 +44,6 @@ Parameters:
       Prefix of parquet files that are created in Apache Hive
       like style by the CTAS query. Including the trailing slash.
 Resources:
-  MyBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref ExistingBucketName
   TransformPartFn:
     Type: AWS::Serverless::Function
     Properties:
@@ -90,7 +86,7 @@ Resources:
           SOURCE_TABLE: !Ref PartitionedGzTable
           TARGET_TABLE: !Ref PartitionedParquetTable
           DATABASE: !Ref CfLogsDatabase
-          ATHENA_QUERY_RESULTS_LOCATION: !Sub "s3://${ResourcePrefix}-${AWS::AccountId}-cf-access-logs/athena-query-results"
+          ATHENA_QUERY_RESULTS_LOCATION: "s3://test.log.partition/athena-query-results"
       Events:
         HourlyEvt:
           Type: Schedule
@@ -131,7 +127,7 @@ Resources:
         Variables:
           TABLE: !Ref PartitionedGzTable
           DATABASE: !Ref CfLogsDatabase
-          ATHENA_QUERY_RESULTS_LOCATION: !Sub "s3://${ResourcePrefix}-${AWS::AccountId}-cf-access-logs/athena-query-results"
+          ATHENA_QUERY_RESULTS_LOCATION: "s3://test.log.partition/athena-query-results"
       Events:
         HourlyEvt:
           Type: Schedule
@@ -174,7 +170,7 @@ Resources:
     Type: "AWS::S3::Bucket"
     Description: "Bucket for Amazon CloudFront access logs"
     Properties:
-      BucketName: !Sub "${ResourcePrefix}-${AWS::AccountId}-cf-access-logs"
+      BucketName: "test.log.partition"
       LifecycleConfiguration:
         Rules:
           - Id: ExpireAthenaQueryResults
@@ -308,7 +304,7 @@ Resources:
             - Name: sc_range_end
               Type: bigint
           InputFormat: org.apache.hadoop.mapred.TextInputFormat
-          Location: !Sub "s3://${ResourcePrefix}-${AWS::AccountId}-cf-access-logs/${GzKeyPrefix}"
+          Location: "s3://test.log.partition/${GzKeyPrefix}"
           SerdeInfo:
             Parameters:
               field.delim": "\t"
@@ -404,7 +400,7 @@ Resources:
             - Name: sc_range_end
               Type: bigint
           InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
-          Location: !Sub "s3://${ResourcePrefix}-${AWS::AccountId}-cf-access-logs/${ParquetKeyPrefix}"
+          Location: "s3://test.log.partition/${ParquetKeyPrefix}"
           SerdeInfo:
             SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
   CombinedView:
