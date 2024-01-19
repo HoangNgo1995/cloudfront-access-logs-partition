@@ -147,14 +147,14 @@ Resources:
               Action:
                 - s3:GetObject
                 - s3:DeleteObject
-              Resource: "arn:aws:s3:::test.log.partition/${NewKeyPrefix}*"
+              Resource: "arn:aws:s3:::test.log.partition/core-bbcincorp-com/*"
             - Effect: Allow
               Action:
                 - s3:PutObject
-              Resource: "arn:aws:s3:::test.log.partition/${GzKeyPrefix}*"
+              Resource: "arn:aws:s3:::test.log.partition/partitioned-core-bbcincorp-com/*"
       Environment:
         Variables:
-          TARGET_KEY_PREFIX: !Ref GzKeyPrefix
+          TARGET_KEY_PREFIX: "partitioned-core-bbcincorp-com/"
       Events:
         AccessLogsUploadedEvent:
           Type: S3
@@ -304,7 +304,7 @@ Resources:
             - Name: sc_range_end
               Type: bigint
           InputFormat: org.apache.hadoop.mapred.TextInputFormat
-          Location: "s3://test.log.partition/${GzKeyPrefix}"
+          Location: "s3://test.log.partition/partitioned-core-bbcincorp-com/"
           SerdeInfo:
             Parameters:
               field.delim": "\t"
@@ -400,7 +400,7 @@ Resources:
             - Name: sc_range_end
               Type: bigint
           InputFormat: org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat
-          Location: "s3://test.log.partition/${ParquetKeyPrefix}"
+          Location: "s3://test.log.partition/partitioned-parquet/"
           SerdeInfo:
             SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
   CombinedView:
