@@ -15,13 +15,13 @@ This application is available in the AWS Serverless Application Repository. You 
 
 The application has two main parts:
 
-- An S3 bucket `<ResourcePrefix>-<AccountId>-cf-access-logs` that serves as a log bucket for Amazon CloudFront access logs. As soon as Amazon CloudFront delivers a new access logs file, an event triggers the AWS Lambda function `moveAccessLogs`. This moves the file to an [Apache Hive style](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-AlterPartition) prefix.
+- An S3 bucket `<ResourcePrefix>-<AccountId>-log.bbcincorp.com` that serves as a log bucket for Amazon CloudFront access logs. As soon as Amazon CloudFront delivers a new access logs file, an event triggers the AWS Lambda function `moveAccessLogs`. This moves the file to an [Apache Hive style](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-AlterPartition) prefix.
 
-    ![infrastructure-overview](images/moveAccessLogs.png)
+  ![infrastructure-overview](images/moveAccessLogs.png)
 
-- An hourly scheduled AWS Lambda function `transformPartition` that runs an [INSERT INTO](https://docs.aws.amazon.com/athena/latest/ug/insert-into.html) query on a single partition per run, taking one hour of data into account. It writes the content of the partition to the Apache Parquet format into the `<ResourcePrefix>-<AccountId>-cf-access-logs` S3 bucket.
+- An hourly scheduled AWS Lambda function `transformPartition` that runs an [INSERT INTO](https://docs.aws.amazon.com/athena/latest/ug/insert-into.html) query on a single partition per run, taking one hour of data into account. It writes the content of the partition to the Apache Parquet format into the `<ResourcePrefix>-<AccountId>-log.bbcincorp.com` S3 bucket.
 
-    ![infrastructure-overview](images/transformPartition.png)
+  ![infrastructure-overview](images/transformPartition.png)
 
 ## FAQs
 
@@ -33,7 +33,7 @@ Use the _Launch Stack_ button above to start the deployment of the application t
 - The `GzKeyPrefix` (default: `partitioned-gz/`) and `ParquetKeyPrefix` (default: `partitioned-parquet/`) are the S3 prefixes for partitions that contain gzip or Apache Parquet files.
 - `ResourcePrefix` (default: `myapp`) is a prefix that is used for the S3 bucket and the AWS Glue database to prevent naming collisions.
 
-The stack contains a single S3 bucket called `<ResourcePrefix>-<AccountId>-cf-access-logs`. After the deployment you can modify your existing Amazon CloudFront distribution configuration to deliver access logs to this bucket with the `new/` log prefix.
+The stack contains a single S3 bucket called `<ResourcePrefix>-<AccountId>-log.bbcincorp.com`. After the deployment you can modify your existing Amazon CloudFront distribution configuration to deliver access logs to this bucket with the `new/` log prefix.
 
 As soon Amazon CloudFront delivers new access logs, files will be moved to `GzKeyPrefix`. After 1-2 hours, they will be transformed to files in `ParquetKeyPrefix`.
 
@@ -49,30 +49,30 @@ SELECT * FROM cf_access_logs.combined limit 10;
 2. Clone the forked GitHub repository to your local machine.
 3. Modify the templates.
 4. Install the [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
-    & [AWS Serverless Application Model (SAM) CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html).
+   & [AWS Serverless Application Model (SAM) CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html).
 5. Validate your template:
 
-    ```sh
-    $ sam validate -t template.yaml
-    ```
+   ```sh
+   $ sam validate -t template.yaml
+   ```
 
 6. Package the files for deployment with SAM (see [SAM docs](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-deploying.html) for details) to a bucket of your choice. The bucket's region must be in the region you want to deploy the sample application to:
 
-    ```sh
-    $ sam package
-        --template-file template.yaml
-        --output-template-file packaged.yaml
-        --s3-bucket <BUCKET>
-    ```
+   ```sh
+   $ sam package
+       --template-file template.yaml
+       --output-template-file packaged.yaml
+       --s3-bucket <BUCKET>
+   ```
 
 7. Deploy the packaged application to your account:
 
-    ```sh
-    $ aws cloudformation deploy
-        --template-file packaged.yaml
-        --stack-name my-stack
-        --capabilities CAPABILITY_IAM
-    ```
+   ```sh
+   $ aws cloudformation deploy
+       --template-file packaged.yaml
+       --stack-name my-stack
+       --capabilities CAPABILITY_IAM
+   ```
 
 ### Q: How can I use the sample application for multiple Amazon CloudFront distributions?
 
